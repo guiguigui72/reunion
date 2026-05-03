@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 DATA_DIR = Path.home() / ".reunion"
