@@ -7,7 +7,15 @@
       "WebFetch(domain:github.com)",
       "Bash(curl *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(Test-Path \"D:\\\\重逢2\\\\node_modules\")",
+      "Bash(Test-Path \"D:\\\\重逢2\\\\backend\\\\prompts\")",
+      "Bash(Test-Path \"D:\\\\重逢2\\\\electron\")",
+      "Bash(Test-Path \"D:\\\\重逢2\\\\src\\\\components\")",
+      "Bash(Test-Path \"D:\\\\重逢2\\\\src\\\\hooks\")",
+      "Bash(Get-ChildItem *)",
+      "Bash(Remove-Item *)",
+      "Bash(npm install *)"
     ]
   }
 }
