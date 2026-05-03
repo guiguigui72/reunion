@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Get-ChildItem -Path \"D:\\\\重逢2\\\\.superpowers\\\\brainstorm\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object FullName)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

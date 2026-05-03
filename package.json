@@ -1,0 +1,26 @@
+{
+  "name": "reunion",
+  "version": "0.1.0",
+  "description": "重逢 — AI companion for remembering loved ones",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  }
+}
