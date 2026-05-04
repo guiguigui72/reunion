@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { useChat } from '../hooks/useChat';
-import { getSettings } from '../api';
+import { getSettings, getAvatarUrl } from '../api';
 
 interface Props { onSettingsClick: () => void; }
 
@@ -9,9 +9,16 @@ export function ChatWindow({ onSettingsClick }: Props) {
   const { messages, isTyping, error, send, loadHistory, messagesEndRef } = useChat();
   const [input, setInput] = useState('');
   const [aiName, setAiName] = useState('');
+  const [hasAvatar, setHasAvatar] = useState(false);
   const isFirstChat = messages.length === 0;
 
-  useEffect(() => { loadHistory(); getSettings().then(c => setAiName(c.name || '')).catch(() => {}); }, [loadHistory]);
+  useEffect(() => {
+    loadHistory();
+    getSettings().then(c => {
+      setAiName(c.name || '');
+      setHasAvatar(c.has_avatar);
+    }).catch(() => {});
+  }, [loadHistory]);
 
   const handleSend = () => { if (!input.trim()) return; send(input); setInput(''); };
 
@@ -23,7 +30,14 @@ export function ChatWindow({ onSettingsClick }: Props) {
     <div className="chat-window">
       <div className="chat-header">
         <div className="header-left">
-          <div className="avatar ai-avatar small" />
+          <div
+            className="avatar ai-avatar small"
+            style={hasAvatar ? {
+              backgroundImage: `url(${getAvatarUrl()}?t=${Date.now()})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : {}}
+          />
           <span className="header-name">{aiName || '重逢'}</span>
         </div>
         <button className="gear-btn" onClick={onSettingsClick}>&#9881;</button>

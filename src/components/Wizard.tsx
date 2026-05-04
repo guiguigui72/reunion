@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { AppStep, SetupRequest } from '../types';
+import { uploadAvatar, getAvatarUrl } from '../api';
 
 interface WizardProps {
   step: AppStep;
@@ -19,10 +20,25 @@ export function Wizard({ step, error, loading, onSubmitSoul, onSubmitUpload }: W
   const [personality, setPersonality] = useState('');
   const [extra, setExtra] = useState('');
   const [chatLog, setChatLog] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSoulSubmit = (e: React.FormEvent) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSoulSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (avatarFile) {
+      try { await uploadAvatar(avatarFile); } catch {}
+    }
     onSubmitSoul({ api_key: apiKey, name, your_name: yourName, relationship, personality, extra });
   };
 
@@ -55,8 +71,26 @@ export function Wizard({ step, error, loading, onSubmitSoul, onSubmitUpload }: W
         <h2>让他离你更近一些</h2>
         <p className="sub">为了让对话更像他，请尽可能多地告诉我</p>
         <div className="avatar-upload">
-          <div className="avatar-circle">设置<br/>头像</div>
+          <div
+            className="avatar-circle"
+            onClick={() => avatarInputRef.current?.click()}
+            style={avatarPreview ? {
+              backgroundImage: `url(${avatarPreview})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              color: 'transparent',
+            } : {}}
+          >
+            {!avatarPreview && <>设置<br/>头像</>}
+          </div>
           <span className="avatar-hint">设置他的头像（可选）</span>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            style={{ display: 'none' }}
+          />
         </div>
         <form onSubmit={handleSoulSubmit}>
           <label>DeepSeek API Key</label>

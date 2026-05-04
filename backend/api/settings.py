@@ -1,7 +1,11 @@
-from fastapi import APIRouter, HTTPException
+import shutil
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from config import load_config, save_config, PERSONA_PATH
+from config import load_config, save_config, PERSONA_PATH, AVATAR_PATH, DATA_DIR
 from persona.distiller import merge_persona
 
 router = APIRouter()
@@ -66,8 +70,26 @@ async def update_settings(req: SettingsUpdate):
 
 @router.delete("/api/settings/reset")
 async def reset_all():
-    import shutil
-    from config import DATA_DIR
     if DATA_DIR.exists():
         shutil.rmtree(str(DATA_DIR))
     return {"status": "ok", "message": "已清除所有数据"}
+
+
+@router.post("/api/settings/avatar")
+async def upload_avatar(file: UploadFile = File(...)):
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="头像文件不能超过5MB")
+    AVATAR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    AVATAR_PATH.write_bytes(content)
+    config = load_config()
+    config["has_avatar"] = True
+    save_config(config)
+    return {"status": "ok"}
+
+
+@router.get("/api/settings/avatar")
+async def get_avatar():
+    if AVATAR_PATH.exists():
+        return FileResponse(str(AVATAR_PATH), media_type="image/png")
+    raise HTTPException(status_code=404, detail="未设置头像")

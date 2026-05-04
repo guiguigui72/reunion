@@ -61,3 +61,20 @@ export function resetAll(): Promise<{ status: string }> {
     method: 'DELETE',
   });
 }
+
+export async function uploadAvatar(file: File): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${BASE_URL}/api/settings/avatar`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || 'Upload failed');
+  }
+}
+
+export function getAvatarUrl(): string {
+  return `${BASE_URL}/api/settings/avatar`;
+}

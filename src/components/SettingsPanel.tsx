@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { getSettings, updateSettings, resetAll } from '../api';
+import React, { useEffect, useState, useRef } from 'react';
+import { getSettings, updateSettings, resetAll, uploadAvatar, getAvatarUrl } from '../api';
 import { DeleteConfirm } from './DeleteConfirm';
 import type { Config } from '../types';
 
@@ -10,8 +10,27 @@ const RELATIONSHIPS = ['父母', '伴侣', '子女', '朋友', '其他'];
 export function SettingsPanel({ onClose }: Props) {
   const [config, setConfig] = useState<Config>({ api_key: '', name: '', your_name: '', relationship: '', personality: '', extra: '', has_avatar: false });
   const [showDelete, setShowDelete] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { getSettings().then(setConfig).catch(() => {}); }, []);
+  useEffect(() => {
+    getSettings().then(c => {
+      setConfig(c);
+      if (c.has_avatar) setAvatarPreview(getAvatarUrl() + '?t=' + Date.now());
+    }).catch(() => {});
+  }, []);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadAvatar(file);
+      setConfig({ ...config, has_avatar: true });
+      const reader = new FileReader();
+      reader.onload = () => setAvatarPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } catch {}
+  };
 
   const handleSave = async () => { await updateSettings(config); onClose(); };
   const handleDelete = async () => { await resetAll(); setShowDelete(false); onClose(); window.location.reload(); };
@@ -25,8 +44,26 @@ export function SettingsPanel({ onClose }: Props) {
         </div>
         <div className="panel-body">
           <div className="avatar-upload">
-            <div className="avatar-circle small">更换<br/>头像</div>
+            <div
+              className="avatar-circle small"
+              onClick={() => avatarInputRef.current?.click()}
+              style={avatarPreview ? {
+                backgroundImage: `url(${avatarPreview})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                color: 'transparent',
+              } : {}}
+            >
+              {!avatarPreview && <>更换<br/>头像</>}
+            </div>
             <span>更换头像</span>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              style={{ display: 'none' }}
+            />
           </div>
           <label>DeepSeek API Key</label>
           <input type="password" value={config.api_key} onChange={e => setConfig({ ...config, api_key: e.target.value })} placeholder="sk-..." />
