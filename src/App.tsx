@@ -24,6 +24,7 @@ export default function App() {
       <div className="app-loading">
         <div className="spinner" />
         <p>正在启动…</p>
+        {error && <p className="error-msg">{error}</p>}
       </div>
     );
   }

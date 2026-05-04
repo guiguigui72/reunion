@@ -15,7 +15,13 @@
       "Bash(Test-Path \"D:\\\\重逢2\\\\src\\\\hooks\")",
       "Bash(Get-ChildItem *)",
       "Bash(Remove-Item *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "PowerShell(py *)",
+      "Bash(python -c \"from config import load_config, save_config; save_config\\({'test': True}\\); print\\(load_config\\(\\)\\)\")",
+      "Bash(git *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(git *)",
+      "Bash(npm run *)"
     ]
   }
 }
