@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "BAAI/bge-small-zh-v1.5"

@@ -21,7 +21,8 @@
       "Bash(git *)",
       "PowerShell(New-Item *)",
       "PowerShell(git *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(D:\\\\develop\\\\Python\\\\python.exe *)"
     ]
   }
 }

@@ -10,7 +10,13 @@ let backendPort = null;
 const PORT_FILE = path.join(os.tmpdir(), 'reunion_port.txt');
 
 function getPythonCommand() {
-    return process.platform === 'win32' ? 'python' : 'python3';
+    if (process.platform === 'win32') {
+        const userPython = 'D:\\develop\\Python\\python.exe';
+        const fs = require('fs');
+        if (fs.existsSync(userPython)) return userPython;
+        return 'python';
+    }
+    return 'python3';
 }
 
 function startPythonBackend() {
