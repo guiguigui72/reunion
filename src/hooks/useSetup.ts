@@ -45,5 +45,9 @@ export function useSetup() {
     }
   }, []);
 
-  return { step, setStep, error, loading, backendReady, init, submitSoul, submitUpload };
+  const goBack = useCallback(() => {
+    if (step === 'upload') setStep('soul');
+  }, [step]);
+
+  return { step, setStep, error, loading, backendReady, init, submitSoul, submitUpload, goBack };
 }

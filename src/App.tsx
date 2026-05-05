@@ -7,7 +7,7 @@ import { getSettings } from './api';
 import type { Config } from './types';
 
 export default function App() {
-  const { step, error, loading, backendReady, init, submitSoul, submitUpload } = useSetup();
+  const { step, error, loading, backendReady, init, submitSoul, submitUpload, goBack } = useSetup();
   const [showSettings, setShowSettings] = useState(false);
   const [config, setConfig] = useState<Config | null>(null);
 
@@ -32,7 +32,7 @@ export default function App() {
   return (
     <div className="app">
       {step !== 'chat' ? (
-        <Wizard step={step} error={error} loading={loading} onSubmitSoul={submitSoul} onSubmitUpload={submitUpload} />
+        <Wizard step={step} error={error} loading={loading} onSubmitSoul={submitSoul} onSubmitUpload={submitUpload} onBack={goBack} />
       ) : (
         <ChatWindow onSettingsClick={() => setShowSettings(true)} />
       )}

@@ -92,6 +92,14 @@ body {
 }
 .drop-zone .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
+.back-btn {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 13px;
+  cursor: pointer; padding: 0; margin-bottom: 16px;
+  font-family: inherit;
+}
+.back-btn:hover { color: var(--text); }
+
 .processing { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .processing .spinner { margin-bottom: 20px; }
 

@@ -8,6 +8,7 @@ interface WizardProps {
   loading: boolean;
   onSubmitSoul: (data: Partial<SetupRequest>) => void;
   onSubmitUpload: (data: SetupRequest) => void;
+  onBack: () => void;
 }
 
 const RELATIONSHIPS = ['父母', '伴侣', '子女', '朋友', '其他'];
@@ -123,6 +124,13 @@ export function Wizard({ step, error, loading, onSubmitSoul, onSubmitUpload }: W
 
   return (
     <div className="wizard upload-step">
+      <button
+        type="button"
+        className="back-btn"
+        onClick={onBack}
+      >
+        &#8592; 返回
+      </button>
       <h2>加载记忆</h2>
       <p className="sub">上传你与他的聊天记录，越完整越好，时间跨度越长他越像本人</p>
       <div className="drop-zone" onClick={() => fileInputRef.current?.click()}>
