@@ -44,7 +44,15 @@ export function ChatWindow({ onSettingsClick }: Props) {
       </div>
       <div className="chat-messages">
         {isFirstChat && <div className="first-chat-banner">这是你们重逢的开始</div>}
-        {messages.map((msg, i) => <MessageBubble key={i} message={msg} aiName={aiName} />)}
+        {messages.map((msg, i) => (
+          <MessageBubble
+            key={i}
+            message={msg}
+            aiName={aiName}
+            hasAvatar={hasAvatar}
+            avatarUrl={getAvatarUrl() + '?t=' + Date.now()}
+          />
+        ))}
         {isTyping && <div className="typing-indicator">对方正在输入...</div>}
         {error && <div className="error-msg">{error}</div>}
         <div ref={messagesEndRef} />
