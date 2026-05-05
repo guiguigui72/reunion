@@ -4,6 +4,7 @@ from config import PERSONA_PATH, load_config
 from rag.embedder import embed_texts
 from rag.store import query_collection
 from persona.correction import handle_correction, is_correction_intent
+from chat.history import get_history
 
 GUARDRAIL = """
 ## 重要规则
@@ -93,14 +94,18 @@ def chat(user_message: str, api_key: str) -> str:
     # Build prompt and call LLM
     system_prompt = build_system_prompt(persona, memories)
 
+    # Include recent conversation history for context
+    recent_history = get_history(limit=30)
+    messages = [{"role": "system", "content": system_prompt}]
+    for h in recent_history:
+        messages.append({"role": h["role"], "content": h["content"]})
+    messages.append({"role": "user", "content": user_message})
+
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
 
     resp = client.chat.completions.create(
         model="deepseek-chat",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ],
+        messages=messages,
         temperature=0.7,
         max_tokens=1024,
     )
