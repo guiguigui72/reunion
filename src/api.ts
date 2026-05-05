@@ -1,4 +1,4 @@
-import type { Config, SetupRequest, SetupResponse, ChatResponse, Message } from './types';
+import type { Config, SetupRequest, SetupResponse, ChatResponse, Message, AnswerItem } from './types';
 
 let BASE_URL = '';
 
@@ -77,4 +77,11 @@ export async function uploadAvatar(file: File): Promise<void> {
 
 export function getAvatarUrl(): string {
   return `${BASE_URL}/api/settings/avatar`;
+}
+
+export async function submitAnswers(apiKey: string, answers: AnswerItem[]): Promise<void> {
+  await request('/api/setup/answers', {
+    method: 'POST',
+    body: JSON.stringify({ api_key: apiKey, answers }),
+  });
 }
