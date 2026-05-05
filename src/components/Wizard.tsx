@@ -13,7 +13,7 @@ interface WizardProps {
 
 const RELATIONSHIPS = ['父母', '伴侣', '子女', '朋友', '其他'];
 
-export function Wizard({ step, error, loading, onSubmitSoul, onSubmitUpload }: WizardProps) {
+export function Wizard({ step, error, loading, onSubmitSoul, onSubmitUpload, onBack }: WizardProps) {
   const [apiKey, setApiKey] = useState('');
   const [name, setName] = useState('');
   const [yourName, setYourName] = useState('');
