@@ -147,10 +147,10 @@ export function Wizard({
           <p style={{ color: '#b8a898', fontSize: '11px', margin: '2px 0 0' }}>你的密钥只会存在本地，不会上传到任何地方</p>
 
           <label style={{ marginTop: 20 }}>你怎么称呼他？</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="妈妈、外婆、阿杰…" required />
+          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="妈妈、外婆、阿杰…" required />
 
           <label>他平时怎么叫你？</label>
-          <input value={yourName} onChange={e => setYourName(e.target.value)} placeholder="小宝、囡囡、或者你的名字…" />
+          <input type="text" value={yourName} onChange={e => setYourName(e.target.value)} placeholder="小宝、囡囡、或者你的名字…" />
 
           <label>你们的关系</label>
           <div className="chips">
@@ -160,16 +160,16 @@ export function Wizard({
           </div>
 
           <label>上次见到他，是什么时候的事了？</label>
-          <input value={lastSeen} onChange={e => setLastSeen(e.target.value)} placeholder="一年多了、上个月、记不太清了…" />
+          <input type="text" value={lastSeen} onChange={e => setLastSeen(e.target.value)} placeholder="一年多了、上个月、记不太清了…" />
 
           <div className="row">
             <div>
               <label>他是哪一年出生的？</label>
-              <input value={birthYear} onChange={e => setBirthYear(e.target.value)} placeholder="1968 年、属猴的…" />
+              <input type="text" value={birthYear} onChange={e => setBirthYear(e.target.value)} placeholder="1968 年、属猴的…" />
             </div>
             <div>
               <label>他的星座和 MBTI？</label>
-              <input value={zodiac} onChange={e => setZodiac(e.target.value)} placeholder="不记得也没关系" />
+              <input type="text" value={zodiac} onChange={e => setZodiac(e.target.value)} placeholder="不记得也没关系" />
             </div>
           </div>
 
@@ -196,7 +196,7 @@ export function Wizard({
           <textarea value={careStyle} onChange={e => setCareStyle(e.target.value)} placeholder="一直问吃了吗、嘴上不说话但什么都帮你做了…" rows={2} />
 
           <label>他有什么改不掉的小习惯？</label>
-          <input value={habit} onChange={e => setHabit(e.target.value)} placeholder="爱说「你看看你」、出门前总要折回来一次…" />
+          <input type="text" value={habit} onChange={e => setHabit(e.target.value)} placeholder="爱说「你看看你」、出门前总要折回来一次…" />
 
           <p style={{ color: '#b8a898', fontSize: '11px', marginTop: 8 }}>不想答的就跳过去</p>
 
