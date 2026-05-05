@@ -37,7 +37,8 @@ async def setup(req: SetupRequest):
     if not req.api_key or not req.name:
         raise HTTPException(status_code=400, detail="api_key and name are required")
 
-    # Save config first
+    # Save config, preserving avatar if already set
+    existing = load_config()
     save_config({
         "api_key": req.api_key,
         "name": req.name,
@@ -45,6 +46,7 @@ async def setup(req: SetupRequest):
         "relationship": req.relationship,
         "personality": req.personality,
         "extra": req.extra,
+        "has_avatar": existing.get("has_avatar", False),
     })
 
     # Distill persona
