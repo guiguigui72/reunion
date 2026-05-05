@@ -10,6 +10,7 @@ export function ChatWindow({ onSettingsClick }: Props) {
   const [input, setInput] = useState('');
   const [aiName, setAiName] = useState('');
   const [hasAvatar, setHasAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const isFirstChat = messages.length === 0;
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export function ChatWindow({ onSettingsClick }: Props) {
     getSettings().then(c => {
       setAiName(c.name || '');
       setHasAvatar(c.has_avatar);
+      if (c.has_avatar) setAvatarUrl(getAvatarUrl());
     }).catch(() => {});
   }, [loadHistory]);
 
@@ -33,7 +35,7 @@ export function ChatWindow({ onSettingsClick }: Props) {
           <div
             className="avatar ai-avatar small"
             style={hasAvatar ? {
-              backgroundImage: `url(${getAvatarUrl()}?t=${Date.now()})`,
+              backgroundImage: `url(${avatarUrl})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             } : {}}
@@ -50,7 +52,7 @@ export function ChatWindow({ onSettingsClick }: Props) {
             message={msg}
             aiName={aiName}
             hasAvatar={hasAvatar}
-            avatarUrl={getAvatarUrl() + '?t=' + Date.now()}
+            avatarUrl={avatarUrl}
           />
         ))}
         {isTyping && <div className="typing-indicator">对方正在输入...</div>}
