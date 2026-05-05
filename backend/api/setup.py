@@ -5,7 +5,7 @@ from config import save_config, load_config
 from rag.chunker import chunk_text, extract_target_only
 from rag.embedder import embed_texts
 from rag.store import get_or_create_collection
-from persona.distiller import distill_persona
+from persona.distiller import distill_persona, extract_entities, merge_answers
 
 router = APIRouter()
 
@@ -18,6 +18,18 @@ class SetupRequest(BaseModel):
     personality: str = ""
     extra: str = ""
     chat_log: str = ""
+
+
+class AnswerItem(BaseModel):
+    entity: str
+    type: str = ""
+    detail: str = ""
+    context_hint: str = ""
+
+
+class AnswersRequest(BaseModel):
+    api_key: str
+    answers: list[AnswerItem]
 
 
 @router.post("/api/setup")
@@ -65,8 +77,31 @@ async def setup(req: SetupRequest):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"记忆索引失败: {str(e)}")
 
+    # Extract entities for smart follow-up
+    questions = []
+    if req.chat_log.strip():
+        try:
+            questions = extract_entities(req.chat_log, req.api_key)
+        except Exception:
+            questions = []
+
     return {
         "status": "ok",
         "message": "设置完成",
         "has_persona": bool(persona),
+        "questions": questions,
     }
+
+
+@router.post("/api/setup/answers")
+async def submit_answers(req: AnswersRequest):
+    if not req.api_key or not req.answers:
+        raise HTTPException(status_code=400, detail="api_key and answers are required")
+
+    try:
+        answers = [a.model_dump() for a in req.answers]
+        merge_answers(answers, req.api_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"答案合并失败: {str(e)}")
+
+    return {"status": "ok"}
