@@ -156,14 +156,45 @@ Layer 2: Expression DNA
 
 ---
 
+### 设置修改时的增量合并（使用 merger.md）
+
+当前 `merge_persona()` 是我们自写的简单 prompt。改为使用 dot-skill 原生 `merger.md`。
+
+**merger.md 的关键规则：**
+- 保留已建立的核心规则，除非新材料明确矛盾
+- 只有在实际材料支撑时才添加新的情绪触发点
+- 区分：他明确说过的 / 他反复做的 / 用户推断的
+- 保留随时间变化的矛盾
+
+流程：
+```
+用户修改设置 → 提取变更字段
+  → 组装：当前 persona.md + 变更内容
+  → LLM 调 merger.md
+  → 输出：更新后的 persona.md
+```
+
+---
+
 ## 改动范围
 
 | 文件 | 改动 |
 |------|------|
-| `backend/persona/distiller.py` | 重写 `distill_persona()` 函数 |
+| `backend/persona/distiller.py` | 重写 `distill_persona()` 使用原生 analyzer + builder |
+| `backend/persona/distiller.py` | 重写 `merge_persona()` 使用原生 merger.md |
 | `backend/api/setup.py` | `SetupRequest` 新增 `last_seen`、`birth_info` 字段 |
 
 仅改 2 个文件，前端无变化。
+
+## prompt 使用总览
+
+| Prompt | 用途 | 状态 |
+|--------|------|------|
+| `intake.md` | 交互式收集信息 | 跳过——表单替代 |
+| `persona_analyzer.md` | 结构化分析 | ✅ 本次启用 |
+| `persona_builder.md` | 生成 6 层 persona | ✅ 本次启用 |
+| `merger.md` | 增量合并更新 | ✅ 本次启用 |
+| `correction_handler.md` | 聊天中纠错 | 已在使用 |
 
 ## 预期效果
 
