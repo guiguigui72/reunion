@@ -285,7 +285,9 @@ export function Wizard({
         </div>
       ))}
 
-      <p style={{ color: '#b8a898', fontSize: '11px', textAlign: 'center', marginBottom: 16 }}>不想答就跳过，不影响后面的聊天</p>
+      <p style={{ color: '#b8a898', fontSize: '11px', textAlign: 'center', marginBottom: 16 }}>
+        有些问题太久远了记不清很正常，跳过就好
+      </p>
       {error && <p className="error-msg">{error}</p>}
       <button className="btn-primary" onClick={submitAnswersAndContinue}>好了，开始整理回忆 →</button>
     </div>
