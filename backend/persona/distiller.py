@@ -245,27 +245,29 @@ What defined this connection:
 
 def merge_persona(updated_fields: dict, api_key: str) -> str:
     """
-    Incrementally update persona when user changes settings.
+    Incrementally update persona using dot-skill's native merger.md prompt.
     """
     current_persona = PERSONA_PATH.read_text(encoding="utf-8") if PERSONA_PATH.exists() else ""
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
+    merger_template = _load_prompt("merger.md")
 
     changes = "\n".join(f"- {k}: {v}" for k, v in updated_fields.items())
-    prompt = f"""## 当前角色设定
+    merge_input = f"""## 当前角色设定
 
 {current_persona}
 
 ## 需要更新的内容
 
-{changes}
-
-请更新以上角色设定，只修改受影响的部分，保留其他内容不变。输出完整的更新后设定。"""
+{changes}"""
 
     resp = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你是一位擅长角色设计的专家。请用中文回复。"},
-            {"role": "user", "content": prompt},
+            {"role": "system", "content": (
+                "你是一位擅长角色设计和提示词工程的中文写作专家。"
+                "请按照合并规则更新角色设定。用中文输出。"
+            )},
+            {"role": "user", "content": merger_template + "\n\n---\n\n" + merge_input},
         ],
         temperature=0.3,
     )
