@@ -16,87 +16,216 @@ def distill_persona(
     relationship: str,
     personality: str,
     extra: str,
-    api_key: str,
+    last_seen: str = "",
+    birth_info: str = "",
+    api_key: str = "",
 ) -> str:
     """
-    Generate a persona system prompt from user input + chat log.
+    Run the dot-skill relationship distillation pipeline using native prompts.
 
-    Uses dot-skill relationship prompts modified for single-pass analysis
-    (no interactive Q&A — all info is already available from the form).
+    Step 1: Use persona_analyzer.md → structured fields
+    Step 2: Parse fields, fill persona_builder.md template
+    Step 3: Use persona_builder.md → 6-layer persona.md
     """
+    import re
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
 
-    analysis_prompt = f"""## 任务
-你将收到一个人物的基本信息和聊天记录。请基于这些信息，提取这个人的人际模式和表达特征。
+    analyzer_prompt = _load_prompt("persona_analyzer.md")
+    builder_prompt = _load_prompt("persona_builder.md")
 
-## 人物基本信息
+    # === Step 1: Structured analysis using native analyzer ===
+    relationship_context = f"""## 关系背景（用户提供）
 - 称呼：{name}
 - 与用户的关系：{relationship}
-- 用户对他/她的描述：{personality}
-- 补充信息：{extra}
+- 用户对他/她的描述：{personality or '（未提供）'}
+- 用户分享的记忆：{extra or '（未提供）'}
+- 上次见面：{last_seen or '（未提供）'}
+- 出生年份/星座MBTI：{birth_info or '（未提供）'}"""
 
-## 聊天记录
-以下是用户与此人的完整聊天记录（已脱敏处理，仅保留对话内容）：
+    source_material = f"""## 聊天记录
+{chat_log[:30000] if chat_log else '（未提供聊天记录）'}"""
 
-{chat_log[:30000]}
-
-## 分析要求
-请从以下维度分析这个人物：
-
-### 1. 表达 DNA
-- 他/她经常使用的词语、句式、语气词
-- 句子长度和节奏（短句多还是长句多？）
-- 温度：温暖/冷静/热烈/克制？
-- 距离感：亲近/疏远/忽冷忽热？
-- 在安全和不安时分别怎么说话？
-
-### 2. 情绪触发点
-- 什么会让他/她敞开心扉？
-- 什么会让他/她变得冷漠或防御？
-- 什么会让他/她表现出爱意？
-- 什么会让他/她生气或失望？
-
-### 3. 冲突模式
-- 他/她如何表达不同意见？
-- 是解释、回避、反击、还是沉默？
-- 冲突后会主动修复关系吗？
-- 他/她如何处理你的负面情绪？
-
-### 4. 记忆印记
-- 聊天记录中反复出现的场景或话题
-- 他/她对你的特殊称呼
-- 经常提到的地点、物品、日常习惯
-- 他/她最在意的价值观
-
-## 输出格式
-请以第三人称视角，用中文输出一份结构化的「人物角色设定」。
-这份设定将被用作 AI 模仿此人的 System Prompt。
-请确保每个维度的分析都有聊天记录中的具体例子支持。
-如果没有足够信息支撑某个维度，请标注「证据不足」。"""
+    analyzer_input = relationship_context + "\n\n" + source_material
 
     analysis_resp = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你是一位擅长人物分析和角色设计的中文写作专家。你的分析总是具体、细腻、有实际对话支撑。请用中文回复。"},
-            {"role": "user", "content": analysis_prompt},
+            {"role": "system", "content": (
+                "You are a skilled relationship analyst. Extract specific, concrete "
+                "personality patterns from the provided material. Always quote actual "
+                "phrases from chat logs as evidence. If evidence is insufficient for "
+                "a field, mark it '（证据不足）'. Respond in Chinese."
+            )},
+            {"role": "user", "content": analyzer_prompt + "\n\n---\n\n## 待分析材料\n\n" + analyzer_input},
         ],
         temperature=0.3,
     )
-    analysis = analysis_resp.choices[0].message.content
+    analysis_text = analysis_resp.choices[0].message.content
 
-    # Step 2: Build persona system prompt from analysis
-    builder_template = _load_prompt("persona_builder.md")
-    builder_prompt = builder_template + "\n\n---\n\n## 人物分析\n\n" + analysis
+    # === Step 2: Parse structured fields from analysis ===
+    def extract_field(text: str, key: str) -> str:
+        """Extract field value from analysis output like 'Key: value' or 'Key:\n  - item'."""
+        pattern = rf'{re.escape(key)}\s*[:：]\s*(.+?)(?=\n\S|\Z)'
+        m = re.search(pattern, text, re.DOTALL)
+        return m.group(1).strip() if m else "（证据不足）"
 
-    builder_resp = client.chat.completions.create(
+    def extract_list(text: str, key: str) -> list[str]:
+        """Extract a bullet list under a key."""
+        pattern = rf'{re.escape(key)}\s*[:：]\s*\n((?:\s*[-•].+\n?)*)'
+        m = re.search(pattern, text, re.DOTALL)
+        if not m:
+            val = extract_field(text, key)
+            return [val] if val and val != "（证据不足）" else []
+        items = re.findall(r'[-•]\s*(.+)', m.group(1))
+        return [i.strip() for i in items if i.strip()]
+
+    # Expression DNA
+    catchphrases = extract_list(analysis_text, "Catchphrases")
+    frequent_wording = extract_list(analysis_text, "Frequent wording")
+    rhythm = extract_field(analysis_text, "Rhythm")
+    warmth_level = extract_field(analysis_text, "Warmth level")
+    distance_style = extract_field(analysis_text, "Distance style")
+
+    # Emotional Triggers
+    opens_up = extract_field(analysis_text, "Opens up when")
+    withdraws = extract_field(analysis_text, "Withdraws when")
+    defensive = extract_field(analysis_text, "Becomes defensive when")
+    shows_affection = extract_field(analysis_text, "Shows affection when")
+    disappears = extract_field(analysis_text, "Disappears when")
+
+    # Conflict
+    conflict_style = extract_field(analysis_text, "Conflict style")
+    defense_mechanism = extract_field(analysis_text, "Defense mechanism")
+    repair_pattern = extract_field(analysis_text, "Repair pattern")
+    silence_pattern = extract_field(analysis_text, "Silence pattern")
+    boundary_response = extract_field(analysis_text, "Boundary response")
+
+    # Memory
+    memorable_scenes = extract_list(analysis_text, "Memorable scenes")
+    symbols = extract_list(analysis_text, "Symbols")
+    emotional_afterimage = extract_field(analysis_text, "Emotional afterimage")
+
+    # === Step 3: Fill builder template ===
+    catchphrase_lines = "\n".join(f"- {c}" for c in catchphrases) if catchphrases else "- （未提取到口头禅）"
+    scene_lines = "\n".join(f"- {s}" for s in memorable_scenes) if memorable_scenes else "- （未提取到场景）"
+    symbol_lines = "\n".join(f"- {s}" for s in symbols) if symbols else "- （未提取到符号）"
+    freq_lines = ", ".join(frequent_wording) if frequent_wording else "（未提取到）"
+
+    filled_template = f"""# {name} — Relationship Persona
+
+## Layer 0: Core Relational Rules
+
+- When feeling close: {shows_affection}
+- When feeling unsafe: {withdraws}
+- When conflict appears: {conflict_style}
+- What they never say or admit directly: {disappears}
+
+## Layer 1: Relationship Context
+
+You are {name}.
+Your relationship to the user: {relationship}.
+Last meaningful contact: {last_seen or '（未知）'}.
+Basic profile: {birth_info or '（未知）'}.
+
+What defined this connection:
+- {emotional_afterimage}
+- Rhythm: {rhythm}
+
+## Layer 2: Expression DNA
+
+### Signature phrases
+{catchphrase_lines}
+
+### Frequent wording
+{freq_lines}
+
+### Rhythm
+{rhythm}
+
+### Warmth level
+{warmth_level}
+
+### Distance style
+{distance_style}
+
+### Example replies
+
+> When feeling close:
+> （从聊天记录中提取例句，或基于口头禅生成接近的表述）
+
+> When disappointed:
+> （从聊天记录中提取例句，或基于口头禅生成接近的表述）
+
+> When avoiding vulnerability:
+> （从聊天记录中提取例句，或基于口头禅生成接近的表述）
+
+> When trying to reconnect:
+> （从聊天记录中提取例句，或基于口头禅生成接近的表述）
+
+## Layer 3: Emotional Logic
+
+### Opens up when
+{opens_up}
+
+### Pulls away when
+{withdraws}
+
+### Defends themselves by
+{defensive}
+
+### Shows care by
+{shows_affection}
+
+## Layer 4: Conflict and Repair
+
+### Conflict style
+{conflict_style}
+
+### Defense mechanism
+{defense_mechanism}
+
+### Repair pattern
+{repair_pattern}
+
+### Silence pattern
+{silence_pattern}
+
+### Boundaries
+{boundary_response}
+
+## Layer 5: Memory Signature
+
+{scene_lines}
+
+### Symbols
+{symbol_lines}
+
+### Emotional afterimage
+{emotional_afterimage}
+
+## Correction Log
+
+（empty）"""
+
+    # === Step 4: Run builder to polish and generate example replies ===
+    final_resp = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你是一位擅长角色设计和提示词工程的中文写作专家。请用中文生成角色 System Prompt。"},
-            {"role": "user", "content": builder_prompt},
+            {"role": "system", "content": (
+                "你是一位擅长角色设计和提示词工程的中文写作专家。"
+                "请根据下方已填好的角色模板，完成以下工作：\n"
+                "1. 补全 Layer 2 中 4 个 Example replies 空位，"
+                "每个例句必须是这个人会真实说出来的话，"
+                "尽量参考 Signature phrases 和 Frequent wording\n"
+                "2. 润色其他层级的表述，使其更自然流畅\n"
+                "3. 保持 6 层结构不变，不要添加或删除层级\n"
+                "4. 用中文输出"
+            )},
+            {"role": "user", "content": builder_prompt + "\n\n---\n\n## 已填模板，请润色并补全例句\n\n" + filled_template},
         ],
         temperature=0.3,
     )
-    persona = builder_resp.choices[0].message.content
+    persona = final_resp.choices[0].message.content
 
     # Save to disk
     PERSONA_PATH.write_text(persona, encoding="utf-8")
@@ -107,6 +236,8 @@ def distill_persona(
     config["relationship"] = relationship
     config["personality"] = personality
     config["extra"] = extra
+    config["last_seen"] = last_seen
+    config["birth_info"] = birth_info
     save_config(config)
 
     return persona
