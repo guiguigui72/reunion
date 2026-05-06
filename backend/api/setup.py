@@ -17,6 +17,8 @@ class SetupRequest(BaseModel):
     relationship: str = ""
     personality: str = ""
     extra: str = ""
+    last_seen: str = ""
+    birth_info: str = ""
     chat_log: str = ""
 
 
@@ -46,6 +48,8 @@ async def setup(req: SetupRequest):
         "relationship": req.relationship,
         "personality": req.personality,
         "extra": req.extra,
+        "last_seen": req.last_seen,
+        "birth_info": req.birth_info,
         "has_avatar": existing.get("has_avatar", False),
     })
 
@@ -59,6 +63,8 @@ async def setup(req: SetupRequest):
                 relationship=req.relationship,
                 personality=req.personality,
                 extra=req.extra,
+                last_seen=req.last_seen,
+                birth_info=req.birth_info,
                 api_key=req.api_key,
             )
         except Exception as e:
