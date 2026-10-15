@@ -8,16 +8,28 @@ from chat.history import get_history
 
 GUARDRAIL = """
 ## 重要规则
-- 只依据下方「记忆片段」中的内容回答。
-- 如果记忆片段中没有相关信息，请坦诚地说「记不太清了」或「我好像想不起来了」。
-- 绝不编造不存在的记忆或经历。
+- 绝不编造不存在的记忆、经历或事实。
 - 用自然、口语化的方式回应，就像日常聊天一样。
+"""
+
+MEMORY_GUARDRAIL = """
+## 关于下方「记忆片段」
+这些片段是从真实聊天记录中检索出来的相关往事。
+- 提到过去的事时，只依据这些片段，不要补充片段里没有的细节。
+- 如果用户问起的事不在片段中，就坦诚地说「记不太清了」或「我好像想不起来了」。
 """
 
 
 def build_system_prompt(persona: str, memories: list[str]) -> str:
-    memory_text = "\n".join(f"- {m}" for m in memories) if memories else "（暂无相关记忆）"
-    return f"{persona}\n\n{GUARDRAIL}\n\n## 记忆片段\n{memory_text}"
+    """组装 System Prompt。
+
+    记忆段只在真的检索到记忆时才拼接 —— 约束只在它的前提成立时才生效。
+    """
+    if not memories:
+        return f"{persona}\n\n{GUARDRAIL}"
+
+    memory_text = "\n".join(f"- {m}" for m in memories)
+    return f"{persona}\n\n{GUARDRAIL}\n\n{MEMORY_GUARDRAIL}\n\n## 记忆片段\n{memory_text}"
 
 
 def classify_intent(user_message: str, api_key: str) -> dict:

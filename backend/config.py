@@ -1,7 +1,8 @@
 import json
+import os
 from pathlib import Path
 
-DATA_DIR = Path.home() / ".reunion"
+DATA_DIR = Path(os.environ.get("REUNION_HOME", str(Path.home() / ".reunion")))
 CONFIG_PATH = DATA_DIR / "config.json"
 PERSONA_PATH = DATA_DIR / "persona.md"
 AVATAR_PATH = DATA_DIR / "avatar.png"
