@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from config import save_config, load_config
 from rag.chunker import chunk_text, extract_target_only
 from rag.embedder import embed_texts
-from rag.store import get_or_create_collection
+from rag.store import reset_collection
 from persona.distiller import distill_persona, extract_entities, merge_answers
 
 router = APIRouter()
@@ -70,18 +70,24 @@ async def setup(req: SetupRequest):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"人格蒸馏失败: {str(e)}")
 
-        # Chunk and embed target's messages
+            # Chunk and embed target's messages
         try:
             target_text = extract_target_only(req.chat_log, req.name)
-            if target_text.strip():
-                chunks = chunk_text(target_text)
-                embeddings = embed_texts(chunks)
-                collection = get_or_create_collection("memories")
-                collection.add(
-                    documents=chunks,
-                    embeddings=embeddings,
-                    ids=[f"mem_{i}" for i in range(len(chunks))],
+            if not target_text.strip():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"这份聊天记录里没有找到「{req.name}」说的话，是不是导出时少选了什么？",
                 )
+            chunks = chunk_text(target_text)
+            embeddings = embed_texts(chunks)
+            collection = reset_collection("memories")
+            collection.add(
+                documents=chunks,
+                embeddings=embeddings,
+                ids=[f"mem_{i}" for i in range(len(chunks))],
+            )
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"记忆索引失败: {str(e)}")
 
