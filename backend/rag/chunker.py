@@ -40,7 +40,7 @@ def parse_chat_log(raw_text: str) -> list[dict]:
                     "sender": current_sender.strip(),
                     "content": "\n".join(current_msg).strip(),
                 })
-            current_sender = m.group(1)
+            current_sender = m.group(1).strip().strip("'\"")
             current_msg = []
         else:
             if line.strip():
