@@ -4,6 +4,57 @@
 
 > 🏆 TRAE SOLO Vibecoding 参赛作品
 
+---
+
+> 📐 **README 结构说明**
+> 本 README 正按「设计文档」结构重组：问题 → 约束 → 架构 → 度量方式 → 数字 → 取舍 → 下一步。
+> **数字部分待步骤 2-8 的实测填充**，现在留 TBD。
+> 原始的功能说明和使用方法保留在下方「附录」。
+
+## 1. 问题
+
+让没有任何编程经验的普通人，也能通过导入与已故亲人的聊天记录，
+生成本地运行的专属 AI 数字亲人。
+
+## 2. 约束
+
+| 约束 | 对技术选型的影响 |
+|------|-----------------|
+| 完全本地运行、隐私优先（核心卖点） | 可观测性必须自托管 → Langfuse，**不用 LangSmith**（仅 SaaS） |
+| 面向零技术背景用户 | 错误信息必须是中文人话，不暴露堆栈、不用红色错误图标 |
+| 单机桌面环境 | 不引入需要外部服务的依赖 |
+
+## 3. 架构
+
+<!-- TBD：步骤 3 完成后补 Mermaid 架构图 -->
+
+## 4. 怎么度量的
+
+<!-- TBD：步骤 2 建立 eval harness 后填写 -->
+
+## 5. 数字
+
+<!-- TBD：步骤 2-8 的实测数据。当前已有的探针数据（仅供参考，非产品指标）：
+     检索语义陷阱：字面重叠 0.824 > 真语义等价 0.424 > 完全无关 0.274
+     分块效果：整段存 0.613 / 切块存 0.358（余弦距离，越小越近） -->
+
+## 6. 取舍
+
+详见 [`docs/decisions/`](docs/decisions/)。已记录的决策：
+
+- [ADR-0002](docs/decisions/0002-guardrail-is-conditional.md) — 记忆约束改为条件式
+- [ADR-0003](docs/decisions/0003-explicit-destructive-operations.md) — 破坏性操作必须显式命名
+- [ADR-0004](docs/decisions/0004-reunion-home-env-var.md) — 数据目录可重定向
+- [ADR-0005](docs/decisions/0005-python-version.md) — Python 锁定 3.13
+
+## 7. 下一步
+
+见[路线图 spec](docs/superpowers/specs/2026-10-11-agent-engineering-roadmap-design.md)与[步骤 1 实现计划](docs/superpowers/plans/2026-10-12-step-1-correctness-bugs.md)。
+
+---
+
+# 附录：功能与使用说明
+
 ## 为什么做这个
 
 目前开源社区的 AI 陪伴 Skill（如前任/同事 Skill）多为命令行工具，需要配置 Python 环境、安装依赖、编写 System Prompt。对于从未接触过代码的大众来说，这些门槛是不可逾越的。
