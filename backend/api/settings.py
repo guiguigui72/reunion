@@ -1,3 +1,4 @@
+import logging
 import shutil
 from pathlib import Path
 
@@ -7,6 +8,8 @@ from pydantic import BaseModel
 
 from config import load_config, save_config, PERSONA_PATH, AVATAR_PATH, DATA_DIR
 from persona.distiller import merge_persona
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -49,21 +52,21 @@ async def update_settings(req: SettingsUpdate):
     if req.relationship and req.relationship != config.get("relationship"):
         updated["relationship"] = req.relationship
 
-    new_config = {
-        "api_key": api_key,
-        "name": req.name or config.get("name", ""),
-        "your_name": req.your_name or config.get("your_name", ""),
-        "relationship": req.relationship or config.get("relationship", ""),
-        "personality": req.personality or config.get("personality", ""),
-        "extra": req.extra or config.get("extra", ""),
-    }
-    save_config(new_config)
+    # 合并而不是覆盖：保留所有本次未提及的字段
+    # （has_avatar / last_seen / birth_info 等）
+    merged = dict(config)
+    merged["api_key"] = api_key
+    for field in ("name", "your_name", "relationship", "personality", "extra"):
+        value = getattr(req, field)
+        if value:
+            merged[field] = value
+    save_config(merged)
 
     if updated and PERSONA_PATH.exists() and api_key:
         try:
             merge_persona(updated, api_key)
         except Exception:
-            pass
+            logger.exception("人格增量合并失败；设置已保存，但 persona.md 未更新")
 
     return {"status": "ok"}
 
