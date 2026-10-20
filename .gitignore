@@ -10,3 +10,5 @@ chroma/
 *.log
 .venv/
 .idea/
+backend/golden/real_golden.jsonl
+backend/results/
