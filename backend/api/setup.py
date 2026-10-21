@@ -78,7 +78,9 @@ async def setup(req: SetupRequest):
                     status_code=400,
                     detail=f"这份聊天记录里没有找到「{req.name}」说的话，是不是导出时少选了什么？",
                 )
-            chunks = chunk_text(target_text)
+            # 分块粒度由 ADR-0007 决定：256 字 / 重叠 40
+            # overlap 必须 >= 40，否则评估用的 evidence 匹配会漏判
+            chunks = chunk_text(target_text, chunk_size=256, overlap=40)
             embeddings = embed_texts(chunks)
             collection = reset_collection("memories")
             collection.add(

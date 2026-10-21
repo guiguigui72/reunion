@@ -34,13 +34,19 @@ def build_index(
     chat_log: str,
     target_name: str,
     extractor: str = "contextual",
+    chunk_size: int = 512,
+    chunk_overlap: int = 64,
 ) -> tuple[int, int]:
-    """用与生产相同的管线建索引。extractor 决定块里带不带对话语境。"""
+    """用与生产相同的管线建索引。
+
+    extractor 决定块里带不带对话语境；
+    chunk_size / chunk_overlap 用于对比不同分块粒度。
+    """
     if extractor not in EXTRACTORS:
         raise ValueError(f"未知的 extractor: {extractor}")
 
     target_text = EXTRACTORS[extractor](chat_log, target_name)
-    chunks = chunk_text(target_text)
+    chunks = chunk_text(target_text, chunk_size=chunk_size, overlap=chunk_overlap)
     embeddings = embed_texts(chunks)
     collection = reset_collection("memories")
     collection.add(
