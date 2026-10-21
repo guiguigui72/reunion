@@ -62,3 +62,33 @@ def extract_target_only(raw_text: str, target_name: str) -> str:
     all_msgs = parse_chat_log(raw_text)
     target_msgs = [m["content"] for m in all_msgs if m["sender"] == target_name]
     return "\n\n".join(target_msgs)
+
+def extract_target_with_context(
+    raw_text: str,
+    target_name: str,
+    max_context_len: int = 120,
+) -> str:
+    """提取目标人物的消息，并为每条附上「最近一条用户发言」作为语境。
+
+    聊天记录的语境就在相邻对话里，机械拼接即可拿到，不需要 LLM 生成。
+    连续发多条时，语境一直沿用，直到用户再次发言。
+    """
+    msgs = parse_chat_log(raw_text)
+    last_user = ""
+    units: list[str] = []
+
+    for msg in msgs:
+        if msg["sender"] != target_name:
+            last_user = msg["content"].strip()[:max_context_len]
+            continue
+
+        content = msg["content"].strip()
+        if not content:
+            continue
+
+        if last_user:
+            units.append(f"【用户说】{last_user}\n【{target_name}回复】{content}")
+        else:
+            units.append(content)
+
+    return "\n\n".join(units)
