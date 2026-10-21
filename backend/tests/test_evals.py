@@ -1,5 +1,7 @@
+import pytest
+
 from evals.golden import build_golden, evidence_key
-from evals.retrieval import mrr, recall_at_k, score_all
+from evals.retrieval import EXTRACTORS, build_index, mrr, recall_at_k, score_all
 
 CHAT = (
     "2024-01-01 10:00 '我'\n你还记得我们去北京那次吗\n"
@@ -81,3 +83,12 @@ def test_score_all_aggregates():
     assert metrics["recall@1"] == 0.5
     assert metrics["recall@5"] == 0.5
     assert metrics["mrr"] == 0.5
+
+
+def test_extractors_registry_has_both():
+    assert set(EXTRACTORS) == {"plain", "contextual"}
+
+
+def test_unknown_extractor_raises():
+    with pytest.raises(ValueError):
+        build_index("", "妈妈", extractor="nope")

@@ -2,10 +2,18 @@
 from __future__ import annotations
 
 from evals.golden import evidence_key
-from rag.chunker import chunk_text, extract_target_only
+from rag.chunker import (
+    chunk_text,
+    extract_target_only,
+    extract_target_with_context,
+)
 from rag.embedder import embed_texts
 from rag.store import query_collection, reset_collection
 
+EXTRACTORS = {
+    "plain": extract_target_only,
+    "contextual": extract_target_with_context,
+}
 
 def recall_at_k(retrieved: list[str], evidence: str, k: int) -> bool:
     """top-k 结果里是否包含证据。"""
@@ -22,9 +30,16 @@ def mrr(retrieved: list[str], evidence: str) -> float:
     return 0.0
 
 
-def build_index(chat_log: str, target_name: str) -> tuple[int, int]:
-    """用与生产完全相同的管线建索引，返回 (目标人物文本字符数, chunk 数)。"""
-    target_text = extract_target_only(chat_log, target_name)
+def build_index(
+    chat_log: str,
+    target_name: str,
+    extractor: str = "contextual",
+) -> tuple[int, int]:
+    """用与生产相同的管线建索引。extractor 决定块里带不带对话语境。"""
+    if extractor not in EXTRACTORS:
+        raise ValueError(f"未知的 extractor: {extractor}")
+
+    target_text = EXTRACTORS[extractor](chat_log, target_name)
     chunks = chunk_text(target_text)
     embeddings = embed_texts(chunks)
     collection = reset_collection("memories")

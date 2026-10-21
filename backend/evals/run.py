@@ -45,6 +45,12 @@ def main() -> None:
                         help="弱标记问题的长度下限，过滤「是吗？」这类附和")
     parser.add_argument("--min-answer-len", type=int, default=15,
                         help="证据的最小长度，过滤「记得啊」这类空回复")
+    parser.add_argument(
+        "--extractor",
+        choices=["plain", "contextual"],
+        default="contextual",
+        help="plain=只取对方发言（旧基线）；contextual=带对话语境",
+    )
     args = parser.parse_args()
 
     chat_log = load_chat(args.chat_log)
@@ -71,7 +77,7 @@ def main() -> None:
     )
     print(f"golden set 已写入 {golden_path}（{len(items)} 条）")
 
-    target_chars, n_chunks = build_index(chat_log, args.target)
+    target_chars, n_chunks = build_index(chat_log, args.target, extractor=args.extractor)
     print(f"索引完成：目标文本 {target_chars} 字符，切分为 {n_chunks} 块")
 
     retrieved_map = {
@@ -91,6 +97,7 @@ def main() -> None:
             "top_k": args.top_k,
             "min_question_len": args.min_question_len,
             "min_answer_len": args.min_answer_len,
+            "extractor": args.extractor,
         },
     }
 

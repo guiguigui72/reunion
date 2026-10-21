@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from config import save_config, load_config
-from rag.chunker import chunk_text, extract_target_only
+from rag.chunker import chunk_text, extract_target_with_context
 from rag.embedder import embed_texts
 from rag.store import reset_collection
 from persona.distiller import distill_persona, extract_entities, merge_answers
@@ -72,7 +72,7 @@ async def setup(req: SetupRequest):
 
             # Chunk and embed target's messages
         try:
-            target_text = extract_target_only(req.chat_log, req.name)
+            target_text = extract_target_with_context(req.chat_log, req.name)
             if not target_text.strip():
                 raise HTTPException(
                     status_code=400,
