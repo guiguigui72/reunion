@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -64,7 +65,7 @@ async def update_settings(req: SettingsUpdate):
 
     if updated and PERSONA_PATH.exists() and api_key:
         try:
-            merge_persona(updated, api_key)
+            await run_in_threadpool(merge_persona, updated, api_key)
         except Exception:
             logger.exception("人格增量合并失败；设置已保存，但 persona.md 未更新")
 
