@@ -7,6 +7,7 @@ DATA_DIR = Path(os.environ.get("REUNION_HOME", str(Path.home() / ".reunion")))
 CONFIG_PATH = DATA_DIR / "config.json"
 PERSONA_PATH = DATA_DIR / "persona.md"
 AVATAR_PATH = DATA_DIR / "avatar.png"
+CORRECTIONS_PATH = DATA_DIR / "corrections.jsonl"
 
 
 def ensure_data_dir() -> None:
